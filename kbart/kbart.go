@@ -3,6 +3,7 @@ package kbart
 import (
 	"encoding/csv"
 	"io"
+	"time"
 
 	"github.com/miku/holdingfile"
 )
@@ -34,8 +35,12 @@ type Entry struct {
 	ZDBID                    string
 }
 
-func (e Entry) Covers(s holdingfile.Signature) (bool, error) {
-	return false, nil
+func (e Entry) Covers(s holdingfile.Signature) error {
+	return nil
+}
+
+func (e Entry) TimeRestricted(t time.Time) error {
+	return nil
 }
 
 // Entries holds a list of license entries.

@@ -11,6 +11,50 @@ import (
 	"github.com/miku/holdingfile"
 )
 
+func TestEmbargeDisallowEarlier(t *testing.T) {
+	var cases = []struct {
+		e               embargo
+		disallowEarlier bool
+	}{
+		{embargo("1"), false},
+		{embargo("R1"), true},
+		{embargo("R1D"), true},
+		{embargo("R10M"), true},
+		{embargo("?10M"), false},
+	}
+
+	for _, c := range cases {
+		got := c.e.DisallowEarlier()
+		if got != c.disallowEarlier {
+			t.Errorf("embargo.DisallowEarlier() got %v, want %v", got, c.disallowEarlier)
+		}
+	}
+}
+
+func TestEmbargoDuration(t *testing.T) {
+	var cases = []struct {
+		e   embargo
+		d   time.Duration
+		err error
+	}{
+		{embargo("1"), time.Duration(0), ErrIncompleteEmbargo},
+		{embargo("R1"), time.Duration(0), ErrIncompleteEmbargo},
+		{embargo("R1D"), -24 * time.Hour, nil},
+		{embargo("R10M"), -7200 * time.Hour, nil},
+		{embargo("?10M"), time.Duration(0), ErrIncompleteEmbargo},
+	}
+
+	for _, c := range cases {
+		got, err := c.e.AsDuration()
+		if err != c.err {
+			t.Errorf("embargo.AsDuration() got %v, want %v", err, c.err)
+		}
+		if got != c.d {
+			t.Errorf("embargo.DisallowEarlier() got %v, want %v", got, c.d)
+		}
+	}
+}
+
 func TestFromReader(t *testing.T) {
 	var tests = []struct {
 		r       io.Reader

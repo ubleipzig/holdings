@@ -18,7 +18,7 @@ var (
 	ErrInvalidEmbargo    = errors.New("invalid embargo")
 )
 
-var delayPattern = regexp.MustCompile(`([P|B])([0-9]+)([Y|M|D])`)
+var delayPattern = regexp.MustCompile(`([P|R])([0-9]+)([Y|M|D])`)
 
 type embargo string
 
@@ -81,7 +81,7 @@ func (e embargo) AsDuration() (time.Duration, error) {
 }
 
 func (e embargo) DisallowEarlier() bool {
-	return strings.HasPrefix(string(e), "R")
+	return strings.HasPrefix(strings.TrimSpace(string(e)), "R")
 }
 
 // Entries holds a list of license entries by ISSN.

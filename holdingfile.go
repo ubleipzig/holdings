@@ -43,7 +43,8 @@ type Entry struct {
 }
 
 // TimeRestricted returns an error, if the given time falls within the moving
-// wall set by the Entry.
+// wall set by the Entry. The embargo is simply added to the current time,
+// so it should expressed with negative values.
 func (e Entry) TimeRestricted(t time.Time) error {
 	var now = time.Now()
 	if e.EmbargoDisallowEarlier {

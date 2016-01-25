@@ -11,6 +11,7 @@ var (
 	ErrBeforeCoverageInterval = errors.New("before coverage interval")
 	ErrAfterCoverageInterval  = errors.New("after coverage interval")
 	ErrMissingValues          = errors.New("missing values")
+	ErrMovingWall             = errors.New("moving wall")
 )
 
 var (
@@ -31,13 +32,35 @@ type License interface {
 	TimeRestricted(time.Time) error
 }
 
-// Entry is a reduced holding file entry.
+// Entry is a reduced holding file entry. Usually, moving wall allow the
+// items, that are earlier then the boundary. If EmbargoDisallowEarlier is
+// set, the effect is reversed.
 type Entry struct {
-	Begin   Signature
-	End     Signature
-	Embargo time.Duration
+	Begin                  Signature
+	End                    Signature
+	Embargo                time.Duration
+	EmbargoDisallowEarlier bool
 }
 
+// TimeRestricted returns an error, if the given time falls within the moving
+// wall set by the Entry.
+func (e Entry) TimeRestricted(t time.Time) error {
+	var now = time.Now()
+	if e.EmbargoDisallowEarlier {
+		if t.Before(now.Add(e.Embargo)) {
+			return ErrMovingWall
+		}
+	}
+	if t.After(now.Add(e.Embargo)) {
+		return ErrMovingWall
+	}
+	return nil
+}
+
+// Covers returns, whether the given signature lies inside the interval
+// defined by entry. If there is not comparable date, the volume and issue
+// comparisons do not make much sense. However, if there is a date, we are ok
+// with just one of volume or issue defined.
 func (e Entry) Covers(s Signature) error {
 	if err := e.compareDate(s); err != nil {
 		return err
@@ -51,11 +74,11 @@ func (e Entry) Covers(s Signature) error {
 	return nil
 }
 
-// compareYear returns an error, if both values are defined and disagree,
-// otherwise we assume there is no error.
+// compareYear returns an error, if both values are defined and disagree, or
+// if too few values are defined to do a sane comparison.
 func (e Entry) compareDate(s Signature) error {
-	if s.Date == "" {
-		return nil
+	if s.Date == "" || (e.Begin.Date == "" && e.End.Date == "") {
+		return ErrMissingValues
 	}
 	if e.Begin.Date != "" {
 		if s.Date < e.Begin.Date {

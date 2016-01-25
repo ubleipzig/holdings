@@ -40,20 +40,20 @@ func TestEntryCovers(t *testing.T) {
 		err         error
 	}{
 		{
-			description: "if nothing is defined, we assume coverage",
+			description: "if nothing is defined, we report missing values",
 			entry: Entry{
 				Begin: Signature{Date: "", Volume: "", Issue: ""},
 				End:   Signature{Date: "", Volume: "", Issue: ""}},
 			s:   Signature{Date: "", Volume: "", Issue: ""},
-			err: nil,
+			err: ErrMissingValues,
 		},
 		{
-			description: "if the record has no date, it will pass, since we cannot determine coverage",
+			description: "if the record has no date, it will report an error, since we cannot determine coverage",
 			entry: Entry{
 				Begin: Signature{Date: "2010", Volume: "", Issue: ""},
 				End:   Signature{Date: "2011", Volume: "", Issue: ""}},
 			s:   Signature{Date: "", Volume: "", Issue: ""},
-			err: nil,
+			err: ErrMissingValues,
 		},
 		{
 			description: "partial holding time spans are ok",
@@ -120,12 +120,12 @@ func TestEntryCovers(t *testing.T) {
 			err: nil,
 		},
 		{
-			description: "pass, if entries define no date",
+			description: "report error, if entries define no date",
 			entry: Entry{
 				Begin: Signature{Date: "", Volume: "1", Issue: ""},
 				End:   Signature{Date: "", Volume: "2", Issue: ""}},
 			s:   Signature{Date: "2010", Volume: "", Issue: ""},
-			err: nil,
+			err: ErrMissingValues,
 		},
 		{
 			description: "pass, if date matches, but record has no volume information",

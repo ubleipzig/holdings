@@ -39,7 +39,7 @@ func (e Entry) Covers(s Signature) error {
 	if err := e.compareVolume(s); err != nil {
 		return err
 	}
-	if err := e.compareIsse(s); err != nil {
+	if err := e.compareIssue(s); err != nil {
 		return err
 	}
 	return nil
@@ -47,14 +47,17 @@ func (e Entry) Covers(s Signature) error {
 
 // compareYear returns an error, if both values are defined and disagree,
 // otherwise we assume there is no error.
-func (e Entry) compareYear(s Signature) error {
-	if e.Begin.Year != "" && s.Year != "" {
-		if s.Year < e.Begin.Year {
+func (e Entry) compareDate(s Signature) error {
+	if s.Date == "" {
+		return nil
+	}
+	if e.Begin.Date != "" {
+		if s.Date < e.Begin.Date {
 			return ErrBeforeCoverageInterval
 		}
 	}
-	if e.End.Year != "" && s.Year != "" {
-		if s.Year > e.End.Year {
+	if e.End.Year != "" {
+		if s.Date > e.End.Date {
 			return ErrAfterCoverageInterval
 		}
 	}
@@ -64,13 +67,15 @@ func (e Entry) compareYear(s Signature) error {
 // compareVolume returns an error, if both values are defined and disagree,
 // otherwise we assume there is no error.
 func (e Entry) compareVolume(s Signature) error {
-	if e.Begin.Volume == "" || s.Volume == "" {
-		return ErrMissingValues
+	if s.Volume == "" {
+		return nil
 	}
-
-	if s.Volume < e.Begin.Volume {
-		return ErrBeforeCoverageInterval
-	} else {
+	if e.Begin.Volume != "" {
+		if s.Volume < e.Begin.Volume {
+			return ErrBeforeCoverageInterval
+		}
+	}
+	if e.End.Volume != "" {
 		if s.Volume > e.End.Volume {
 			return ErrAfterCoverageInterval
 		}
@@ -81,12 +86,15 @@ func (e Entry) compareVolume(s Signature) error {
 // compareIssue returns an error, if both values are defined and disagree,
 // otherwise we assume there is no error.
 func (e Entry) compareIssue(s Signature) error {
-	if e.Begin.Issue != "" && s.Issue != "" {
+	if s.Issue == "" {
+		return nil
+	}
+	if e.Begin.Issue != "" {
 		if s.Issue < e.Begin.Issue {
 			return ErrBeforeCoverageInterval
 		}
 	}
-	if e.End.Issue != "" && s.Issue != "" {
+	if e.End.Issue != "" {
 		if s.Issue > e.End.Issue {
 			return ErrAfterCoverageInterval
 		}
@@ -95,10 +103,11 @@ func (e Entry) compareIssue(s Signature) error {
 }
 
 // Signature is a bag of information of the record from which coverage can be
-// determined. Year should be four digits, volume and issue should be in the
-// best case integers, but sometimes they won't.
+// determined. Date should can be a date in with optional year, month, day. The
+// volume and issue should be in the best case integers, but sometimes they
+// won't.
 type Signature struct {
-	Year   string
+	Date   string
 	Volume string
 	Issue  string
 }

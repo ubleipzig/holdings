@@ -2,6 +2,8 @@ package holdingfile
 
 import (
 	"errors"
+	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -9,6 +11,10 @@ var (
 	ErrBeforeCoverageInterval = errors.New("before coverage interval")
 	ErrAfterCoverageInterval  = errors.New("after coverage interval")
 	ErrMissingValues          = errors.New("missing values")
+)
+
+var (
+	intPattern = regexp.MustCompile("[0-9]+")
 )
 
 // Holdings can return a list of licenses for a given ISSN.
@@ -33,7 +39,7 @@ type Entry struct {
 }
 
 func (e Entry) Covers(s Signature) error {
-	if err := e.compareYear(s); err != nil {
+	if err := e.compareDate(s); err != nil {
 		return err
 	}
 	if err := e.compareVolume(s); err != nil {
@@ -56,7 +62,7 @@ func (e Entry) compareDate(s Signature) error {
 			return ErrBeforeCoverageInterval
 		}
 	}
-	if e.End.Year != "" {
+	if e.End.Date != "" {
 		if s.Date > e.End.Date {
 			return ErrAfterCoverageInterval
 		}
@@ -71,12 +77,12 @@ func (e Entry) compareVolume(s Signature) error {
 		return nil
 	}
 	if e.Begin.Volume != "" {
-		if s.Volume < e.Begin.Volume {
+		if s.VolumeInt() < e.Begin.VolumeInt() {
 			return ErrBeforeCoverageInterval
 		}
 	}
 	if e.End.Volume != "" {
-		if s.Volume > e.End.Volume {
+		if s.VolumeInt() > e.End.VolumeInt() {
 			return ErrAfterCoverageInterval
 		}
 	}
@@ -90,12 +96,12 @@ func (e Entry) compareIssue(s Signature) error {
 		return nil
 	}
 	if e.Begin.Issue != "" {
-		if s.Issue < e.Begin.Issue {
+		if s.IssueInt() < e.Begin.IssueInt() {
 			return ErrBeforeCoverageInterval
 		}
 	}
 	if e.End.Issue != "" {
-		if s.Issue > e.End.Issue {
+		if s.IssueInt() > e.End.IssueInt() {
 			return ErrAfterCoverageInterval
 		}
 	}
@@ -107,9 +113,29 @@ func (e Entry) compareIssue(s Signature) error {
 // volume and issue should be in the best case integers, but sometimes they
 // won't.
 type Signature struct {
+	// Date is often just a year, but sometime also an ISO-8601 date.
 	Date   string
 	Volume string
 	Issue  string
+}
+
+// VolumeInt returns the Volume in a best effort manner.
+func (s Signature) VolumeInt() int64 {
+	return findInt(s.Volume)
+}
+
+// VolumeInt returns the Volume in a best effort manner.
+func (s Signature) IssueInt() int64 {
+	return findInt(s.Issue)
+}
+
+func findInt(s string) int64 {
+	if m := intPattern.FindString(s); m == "" {
+		return 0
+	} else {
+		i, _ := strconv.ParseInt(m, 10, 32)
+		return i
+	}
 }
 
 type ISSN string

@@ -49,7 +49,8 @@ func (e Entry) TimeRestricted(t time.Time) error {
 // Entries holds a list of license entries.
 type Entries []Entry
 
-// FromReader loads entries from a tab-separated file.
+// FromReader loads entries from a reader. Must be a tab-separated CSV with
+// exactly one header row.
 func ReadEntries(r io.Reader) (Entries, error) {
 	var entries Entries
 

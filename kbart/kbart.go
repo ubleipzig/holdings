@@ -13,9 +13,10 @@ import (
 )
 
 var (
-	ErrIncompleteLine    = errors.New("incomplete KBART line")
-	ErrIncompleteEmbargo = errors.New("incomplete embargo")
-	ErrInvalidEmbargo    = errors.New("invalid embargo")
+	ErrIncompleteLine     = errors.New("incomplete KBART line")
+	ErrIncompleteEmbargo  = errors.New("incomplete embargo")
+	ErrInvalidEmbargo     = errors.New("invalid embargo")
+	ErrMissingIdentifiers = errors.New("missing identifiers")
 )
 
 var delayPattern = regexp.MustCompile(`([P|R])([0-9]+)([Y|M|D])`)
@@ -25,8 +26,8 @@ type embargo string
 // entry represents the various columns.
 type columns struct {
 	PublicationTitle         string
-	PrintIdentifier          holdingfile.ISSN
-	OnlineIdentifier         holdingfile.ISSN
+	PrintIdentifier          string
+	OnlineIdentifier         string
 	FirstIssueDate           string
 	FirstVolume              string
 	FirstIssue               string
@@ -84,28 +85,10 @@ func (e embargo) DisallowEarlier() bool {
 	return strings.HasPrefix(strings.TrimSpace(string(e)), "R")
 }
 
-// Entries holds a list of license entries by ISSN.
-type Entries struct {
-	Map map[holdingfile.ISSN][]holdingfile.Entry
-}
-
-func New() Entries {
-	return Entries{Map: make(map[holdingfile.ISSN][]holdingfile.Entry)}
-}
-
-func (e Entries) Licenses(issn holdingfile.ISSN) []holdingfile.License {
-	entries := e.Map[issn]
-	var licenses []holdingfile.License
-	for _, e := range entries {
-		licenses = append(licenses, e)
-	}
-	return licenses
-}
-
-// FromReader loads entries from a reader. Must be a tab-separated CSV with
+// ReadEntries loads entries from a reader. Must be a tab-separated CSV with
 // exactly one header row.
-func ReadEntries(r io.Reader) (Entries, error) {
-	entries := New()
+func ReadEntries(r io.Reader) (holdingfile.Entries, error) {
+	entries := holdingfile.NewEntries()
 
 	reader := csv.NewReader(r)
 	reader.Comma = '\t'
@@ -128,8 +111,8 @@ func ReadEntries(r io.Reader) (Entries, error) {
 
 		cols := columns{
 			PublicationTitle:         record[0],
-			PrintIdentifier:          holdingfile.ISSN(record[1]),
-			OnlineIdentifier:         holdingfile.ISSN(record[2]),
+			PrintIdentifier:          record[1],
+			OnlineIdentifier:         record[2],
 			FirstIssueDate:           record[3],
 			FirstVolume:              record[4],
 			FirstIssue:               record[5],
@@ -169,6 +152,10 @@ func ReadEntries(r io.Reader) (Entries, error) {
 			},
 			Embargo:                emb,
 			EmbargoDisallowEarlier: cols.Embargo.DisallowEarlier(),
+		}
+
+		if cols.PrintIdentifier == "" && cols.OnlineIdentifier == "" {
+			return entries, ErrMissingIdentifiers
 		}
 
 		if cols.PrintIdentifier != "" {

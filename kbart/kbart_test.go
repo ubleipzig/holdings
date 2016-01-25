@@ -58,20 +58,20 @@ func TestEmbargoDuration(t *testing.T) {
 func TestFromReader(t *testing.T) {
 	var tests = []struct {
 		r       io.Reader
-		entries Entries
+		entries holdingfile.Entries
 		err     error
 	}{
 		{r: strings.NewReader("first line is discarded"),
-			entries: Entries{Map: map[holdingfile.ISSN][]holdingfile.Entry{}},
+			entries: holdingfile.Entries{Map: map[string][]holdingfile.Entry{}},
 			err:     nil},
 		{r: strings.NewReader("xxx\nyyy\nzzz"),
-			entries: Entries{Map: map[holdingfile.ISSN][]holdingfile.Entry{}},
+			entries: holdingfile.Entries{Map: map[string][]holdingfile.Entry{}},
 			err:     ErrIncompleteLine},
 		{r: strings.NewReader(`publication_title	print_identifier	online_identifier	date_first_issue_online	num_first_vol_online	num_first_issue_online	date_last_issue_online	num_last_vol_online	num_last_issue_online	title_url	first_author	title_id	embargo_info	coverage_depth	coverage_notes	publisher_name	own_anchor	il_relevance	il_nationwide	il_electronic_transmission	il_comment	all_issns	zdb_id
 Bill of Rights Journal (via Hein Online)	0006-2499		1968	1		1996	29		http://heinonline.org/HOL/Index?index=journals/blorij&collection=journals		227801		Volltext		via Hein Online		Keine Fernleihe				0006-2499	2805467-2`),
-			entries: Entries{
-				Map: map[holdingfile.ISSN][]holdingfile.Entry{
-					holdingfile.ISSN("0006-2499"): []holdingfile.Entry{
+			entries: holdingfile.Entries{
+				Map: map[string][]holdingfile.Entry{
+					"0006-2499": []holdingfile.Entry{
 						holdingfile.Entry{
 							Begin: holdingfile.Signature{
 								Date:   "1968",

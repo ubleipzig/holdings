@@ -20,7 +20,7 @@ var (
 
 // Holdings can return a list of licenses for a given ISSN.
 type Holdings interface {
-	Licenses(ISSN) []License
+	Licenses(string) []License
 }
 
 // License exposes methods to let clients check their own validity in the
@@ -168,4 +168,22 @@ func findInt(s string) int {
 	}
 }
 
-type ISSN string
+// Entries holds a list of license entries by ISSN.
+type Entries struct {
+	Map map[string][]Entry
+}
+
+// NewEntries returns an empty entries map.
+func NewEntries() Entries {
+	return Entries{Map: make(map[string][]Entry)}
+}
+
+// Licenses turns Entries into a Holdings thing.
+func (e Entries) Licenses(issn string) []License {
+	entries := e.Map[issn]
+	var licenses []License
+	for _, e := range entries {
+		licenses = append(licenses, e)
+	}
+	return licenses
+}

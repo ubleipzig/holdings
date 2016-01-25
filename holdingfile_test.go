@@ -22,6 +22,16 @@ func BenchmarkEntryCoversSimple(b *testing.B) {
 	}
 }
 
+func BenchmarkEntryCoversEmpty(b *testing.B) {
+	entry := Entry{
+		Begin: Signature{Date: "", Volume: "", Issue: ""},
+		End:   Signature{Date: "", Volume: "", Issue: ""}}
+	s := Signature{Date: "", Volume: "", Issue: ""}
+	for i := 0; i < b.N; i++ {
+		_ = entry.Covers(s)
+	}
+}
+
 func TestEntryCovers(t *testing.T) {
 	var tests = []struct {
 		description string

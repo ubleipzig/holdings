@@ -2,6 +2,26 @@ package holdingfile
 
 import "testing"
 
+func BenchmarkEntryCoversFull(b *testing.B) {
+	entry := Entry{
+		Begin: Signature{Date: "2009", Volume: "10", Issue: "123"},
+		End:   Signature{Date: "2011", Volume: "12", Issue: "234"}}
+	s := Signature{Date: "2009", Volume: "11", Issue: "124"}
+	for i := 0; i < b.N; i++ {
+		_ = entry.Covers(s)
+	}
+}
+
+func BenchmarkEntryCoversSimple(b *testing.B) {
+	entry := Entry{
+		Begin: Signature{Date: "2009", Volume: "", Issue: ""},
+		End:   Signature{Date: "2011", Volume: "", Issue: ""}}
+	s := Signature{Date: "1999", Volume: "", Issue: "0"}
+	for i := 0; i < b.N; i++ {
+		_ = entry.Covers(s)
+	}
+}
+
 func TestEntryCovers(t *testing.T) {
 	var tests = []struct {
 		description string
@@ -114,7 +134,7 @@ func TestEntryCovers(t *testing.T) {
 			err: nil,
 		},
 		{
-			description: "pass, if date is covered, volume not covered",
+			description: "pass, if date is covered, volume too late",
 			entry: Entry{
 				Begin: Signature{Date: "2009", Volume: "1", Issue: ""},
 				End:   Signature{Date: "2011", Volume: "2", Issue: ""}},
@@ -122,12 +142,12 @@ func TestEntryCovers(t *testing.T) {
 			err: ErrAfterCoverageInterval,
 		},
 		{
-			description: "pass, if date is covered, volume not covered",
+			description: "pass, if date is covered, volume too early",
 			entry: Entry{
 				Begin: Signature{Date: "2009", Volume: "10", Issue: ""},
 				End:   Signature{Date: "2011", Volume: "12", Issue: ""}},
 			s:   Signature{Date: "2009", Volume: "9", Issue: ""},
-			err: ErrAfterCoverageInterval,
+			err: ErrBeforeCoverageInterval,
 		},
 	}
 

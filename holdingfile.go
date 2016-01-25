@@ -120,21 +120,27 @@ type Signature struct {
 }
 
 // VolumeInt returns the Volume in a best effort manner.
-func (s Signature) VolumeInt() int64 {
+func (s Signature) VolumeInt() int {
 	return findInt(s.Volume)
 }
 
 // VolumeInt returns the Volume in a best effort manner.
-func (s Signature) IssueInt() int64 {
+func (s Signature) IssueInt() int {
 	return findInt(s.Issue)
 }
 
-func findInt(s string) int64 {
+// findInt return the first int that is found in s or 0 if there is no number.
+func findInt(s string) int {
+	// we expect to see a number most of the time
+	if i, err := strconv.Atoi(s); err == nil {
+		return int(i)
+	}
+	// otherwise try to parse out a number
 	if m := intPattern.FindString(s); m == "" {
 		return 0
 	} else {
 		i, _ := strconv.ParseInt(m, 10, 32)
-		return i
+		return int(i)
 	}
 }
 

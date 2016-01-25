@@ -149,6 +149,38 @@ func TestEntryCovers(t *testing.T) {
 			s:   Signature{Date: "2009", Volume: "9", Issue: ""},
 			err: ErrBeforeCoverageInterval,
 		},
+		{
+			description: "deny, even though signature volume is weird",
+			entry: Entry{
+				Begin: Signature{Date: "2009", Volume: "10", Issue: ""},
+				End:   Signature{Date: "2011", Volume: "12", Issue: ""}},
+			s:   Signature{Date: "2009", Volume: "Vol. 9", Issue: ""},
+			err: ErrBeforeCoverageInterval,
+		},
+		{
+			description: "pass, even though signature volume is weird",
+			entry: Entry{
+				Begin: Signature{Date: "2009", Volume: "10", Issue: ""},
+				End:   Signature{Date: "2011", Volume: "12", Issue: ""}},
+			s:   Signature{Date: "2009", Volume: "Vol. 11", Issue: ""},
+			err: nil,
+		},
+		{
+			description: "pass, even though signature volume is weirder",
+			entry: Entry{
+				Begin: Signature{Date: "2009", Volume: "10", Issue: ""},
+				End:   Signature{Date: "2011", Volume: "12", Issue: ""}},
+			s:   Signature{Date: "2009", Volume: "11. Ausgabe vom 100", Issue: ""},
+			err: nil,
+		},
+		{
+			description: "fail, even though signature volume is correct, but too weird",
+			entry: Entry{
+				Begin: Signature{Date: "2009", Volume: "10", Issue: ""},
+				End:   Signature{Date: "2011", Volume: "12", Issue: ""}},
+			s:   Signature{Date: "2009", Volume: "100 Total Vol 6", Issue: ""},
+			err: ErrAfterCoverageInterval,
+		},
 	}
 
 	for _, test := range tests {

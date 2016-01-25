@@ -2,17 +2,20 @@ package kbart
 
 import (
 	"encoding/csv"
+	"errors"
 	"io"
 	"time"
 
 	"github.com/miku/holdingfile"
 )
 
+var ErrorIncompleteLine = errors.New("incomplete KBART line")
+
 // Knowledge Bases And Related Tools working group.
 type Entry struct {
 	PublicationTitle         string
-	PrintIdentifier          string
-	OnlineIdentifier         string
+	PrintIdentifier          holdingfile.ISSN
+	OnlineIdentifier         holdingfile.ISSN
 	FirstIssueDate           string
 	FirstVolume              string
 	FirstIssue               string
@@ -47,9 +50,15 @@ func (e Entry) TimeRestricted(t time.Time) error {
 type Entries []Entry
 
 // FromReader loads entries from a tab-separated file.
-func (e Entries) FromReader(r io.Reader) error {
+func ReadEntries(r io.Reader) (Entries, error) {
+	var entries Entries
+
 	reader := csv.NewReader(r)
 	reader.Comma = '\t'
+
+	if _, err := reader.Read(); err != nil {
+		return entries, err
+	}
 
 	for {
 		record, err := reader.Read()
@@ -57,12 +66,15 @@ func (e Entries) FromReader(r io.Reader) error {
 			break
 		}
 		if err != nil {
-			return err
+			return entries, err
 		}
-		e = append(e, Entry{
+		if len(record) < 23 {
+			return nil, ErrorIncompleteLine
+		}
+		entries = append(entries, Entry{
 			PublicationTitle:         record[0],
-			PrintIdentifier:          record[1],
-			OnlineIdentifier:         record[2],
+			PrintIdentifier:          holdingfile.ISSN(record[1]),
+			OnlineIdentifier:         holdingfile.ISSN(record[2]),
 			FirstIssueDate:           record[3],
 			FirstVolume:              record[4],
 			FirstIssue:               record[5],
@@ -81,10 +93,9 @@ func (e Entries) FromReader(r io.Reader) error {
 			InterlibraryNationwide:   record[18],
 			InterlibraryTransmission: record[19],
 			InterlibraryComment:      record[20],
-			Publisher:                record[21],
-			ZDBID:                    record[23]})
+			ZDBID:                    record[22]})
 	}
-	return nil
+	return entries, nil
 }
 
 func (e Entries) Licenses(issn holdingfile.ISSN) []holdingfile.License {
@@ -92,4 +103,5 @@ func (e Entries) Licenses(issn holdingfile.ISSN) []holdingfile.License {
 		if entry.PrintIdentifier == issn || entry.OnlineIdentifier == issn {
 		}
 	}
+	return nil
 }

@@ -4,15 +4,26 @@ import (
 	"encoding/csv"
 	"errors"
 	"io"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/miku/holdingfile"
 )
 
-var ErrorIncompleteLine = errors.New("incomplete KBART line")
+var (
+	ErrIncompleteLine    = errors.New("incomplete KBART line")
+	ErrIncompleteEmbargo = errors.New("incomplete embargo")
+	ErrInvalidEmbargo    = errors.New("invalid embargo")
+)
 
-// Knowledge Bases And Related Tools working group.
-type Entry struct {
+var delayPattern = regexp.MustCompile(`([P|B])([0-9]+)([Y|M|D])`)
+
+type embargo string
+
+// entry represents the various columns.
+type columns struct {
 	PublicationTitle         string
 	PrintIdentifier          holdingfile.ISSN
 	OnlineIdentifier         holdingfile.ISSN
@@ -25,7 +36,7 @@ type Entry struct {
 	TitleURL                 string
 	FirstAuthor              string
 	TitleID                  string
-	Embargo                  string
+	Embargo                  embargo
 	CoverageDepth            string
 	CoverageNotes            string
 	PublisherName            string
@@ -38,21 +49,63 @@ type Entry struct {
 	ZDBID                    string
 }
 
-func (e Entry) Covers(s holdingfile.Signature) error {
-	return nil
+// Convert string like P12M, P1M, R10Y into a time.Duration.
+func (e embargo) AsDuration() (time.Duration, error) {
+	var d time.Duration
+
+	emb := strings.TrimSpace(string(e))
+	if len(emb) == 0 {
+		return d, nil
+	}
+
+	var parts = delayPattern.FindStringSubmatch(emb)
+	if len(parts) < 4 {
+		return d, ErrIncompleteEmbargo
+	}
+
+	i, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return d, ErrInvalidEmbargo
+	}
+
+	switch parts[3] {
+	case "D":
+		return time.Duration(-i) * 24 * time.Hour, nil
+	case "M":
+		return time.Duration(-i) * 24 * time.Hour * 30, nil
+	case "Y":
+		return time.Duration(-i) * 24 * time.Hour * 30 * 365, nil
+	default:
+		return d, ErrInvalidEmbargo
+	}
 }
 
-func (e Entry) TimeRestricted(t time.Time) error {
-	return nil
+func (e embargo) DisallowEarlier() bool {
+	return strings.HasPrefix(string(e), "R")
 }
 
-// Entries holds a list of license entries.
-type Entries []Entry
+// Entries holds a list of license entries by ISSN.
+type Entries struct {
+	Map map[holdingfile.ISSN][]holdingfile.Entry
+}
+
+func New() Entries {
+	return Entries{Map: make(map[holdingfile.ISSN][]holdingfile.Entry)}
+}
+
+func (e Entries) Licenses(issn holdingfile.ISSN) []holdingfile.License {
+	entries := e.Map[issn]
+	var licenses []holdingfile.License
+	for _, e := range entries {
+		licenses = append(licenses, e)
+	}
+	return licenses
+}
 
 // FromReader loads entries from a reader. Must be a tab-separated CSV with
 // exactly one header row.
 func ReadEntries(r io.Reader) (Entries, error) {
-	var entries Entries
+	entries := New()
 
 	reader := csv.NewReader(r)
 	reader.Comma = '\t'
@@ -70,9 +123,10 @@ func ReadEntries(r io.Reader) (Entries, error) {
 			return entries, err
 		}
 		if len(record) < 23 {
-			return nil, ErrorIncompleteLine
+			return entries, ErrIncompleteLine
 		}
-		entries = append(entries, Entry{
+
+		cols := columns{
 			PublicationTitle:         record[0],
 			PrintIdentifier:          holdingfile.ISSN(record[1]),
 			OnlineIdentifier:         holdingfile.ISSN(record[2]),
@@ -85,7 +139,7 @@ func ReadEntries(r io.Reader) (Entries, error) {
 			TitleURL:                 record[9],
 			FirstAuthor:              record[10],
 			TitleID:                  record[11],
-			Embargo:                  record[12],
+			Embargo:                  embargo(record[12]),
 			CoverageDepth:            record[13],
 			CoverageNotes:            record[14],
 			PublisherName:            record[15],
@@ -94,15 +148,35 @@ func ReadEntries(r io.Reader) (Entries, error) {
 			InterlibraryNationwide:   record[18],
 			InterlibraryTransmission: record[19],
 			InterlibraryComment:      record[20],
-			ZDBID:                    record[22]})
-	}
-	return entries, nil
-}
+			ZDBID:                    record[22],
+		}
 
-func (e Entries) Licenses(issn holdingfile.ISSN) []holdingfile.License {
-	for _, entry := range e {
-		if entry.PrintIdentifier == issn || entry.OnlineIdentifier == issn {
+		emb, err := cols.Embargo.AsDuration()
+		if err != nil {
+			return entries, err
+		}
+
+		entry := holdingfile.Entry{
+			Begin: holdingfile.Signature{
+				Date:   cols.FirstIssueDate,
+				Volume: cols.FirstVolume,
+				Issue:  cols.FirstIssue,
+			},
+			End: holdingfile.Signature{
+				Date:   cols.LastIssueDate,
+				Volume: cols.LastVolume,
+				Issue:  cols.LastIssue,
+			},
+			Embargo:                emb,
+			EmbargoDisallowEarlier: cols.Embargo.DisallowEarlier(),
+		}
+
+		if cols.PrintIdentifier != "" {
+			entries.Map[cols.PrintIdentifier] = append(entries.Map[cols.PrintIdentifier], entry)
+		}
+		if cols.OnlineIdentifier != "" {
+			entries.Map[cols.OnlineIdentifier] = append(entries.Map[cols.OnlineIdentifier], entry)
 		}
 	}
-	return nil
+	return entries, nil
 }

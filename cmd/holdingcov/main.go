@@ -10,6 +10,7 @@ import (
 
 	"github.com/miku/holdingfile"
 	"github.com/miku/holdingfile/kbart"
+	"github.com/miku/holdingfile/ovid"
 )
 
 var layouts = []string{
@@ -20,6 +21,7 @@ var layouts = []string{
 func main() {
 	date := flag.String("date", "", "record date")
 	filename := flag.String("file", "", "holding file")
+	format := flag.String("format", "kbart", "holding file format: kbart, ovid or google")
 	issn := flag.String("issn", "", "record issn")
 	issue := flag.String("issue", "", "record issue")
 	volume := flag.String("volume", "", "record volume")
@@ -44,8 +46,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r := kbart.NewReader(file)
-	holdings, err := r.ReadAll()
+	var hfile holdingfile.File
+
+	switch *format {
+	case "kbart":
+		hfile = kbart.NewReader(file)
+	case "ovid":
+		hfile = ovid.NewReader(file)
+	default:
+		log.Fatal("unknown format")
+
+	}
+
+	holdings, err := hfile.ReadAll()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -71,8 +84,9 @@ func main() {
 		if *verbose {
 			log.Printf("%+v", l)
 		}
-		cov := l.Covers(s)
-		wall := l.TimeRestricted(t)
+
+		cov, wall := l.Covers(s), l.TimeRestricted(t)
+
 		if cov == nil && wall == nil {
 			fmt.Printf("%d\tOK\tNo restrictions.\n", i)
 		}
@@ -83,5 +97,4 @@ func main() {
 			fmt.Printf("%d\tNO\tMoving wall applies.\n", i)
 		}
 	}
-
 }

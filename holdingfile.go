@@ -77,10 +77,18 @@ func (e Entry) Covers(s Signature) error {
 		return err
 	}
 	if err := e.compareVolume(s); err != nil {
-		return err
+		switch err {
+		case ErrMissingValues:
+		default:
+			return err
+		}
 	}
 	if err := e.compareIssue(s); err != nil {
-		return err
+		switch err {
+		case ErrMissingValues:
+		default:
+			return err
+		}
 	}
 	return nil
 }
@@ -107,8 +115,8 @@ func (e Entry) compareDate(s Signature) error {
 // compareVolume returns an error, if both values are defined and disagree,
 // otherwise we assume there is no error.
 func (e Entry) compareVolume(s Signature) error {
-	if s.Volume == "" {
-		return nil
+	if s.Volume == "" || (e.Begin.Volume == "" && e.End.Volume == "") {
+		return ErrMissingValues
 	}
 	if e.Begin.Volume != "" {
 		if s.VolumeInt() < e.Begin.VolumeInt() {
@@ -126,7 +134,7 @@ func (e Entry) compareVolume(s Signature) error {
 // compareIssue returns an error, if both values are defined and disagree,
 // otherwise we assume there is no error.
 func (e Entry) compareIssue(s Signature) error {
-	if s.Issue == "" {
+	if s.Issue == "" || (e.Begin.Issue == "" && e.End.Issue == "") {
 		return nil
 	}
 	if e.Begin.Issue != "" {

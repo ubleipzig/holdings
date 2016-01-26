@@ -66,13 +66,13 @@ func main() {
 		cov := l.Covers(s)
 		wall := l.TimeRestricted(t)
 		if cov == nil && wall == nil {
-			fmt.Printf("%d: OK. No restrictions.\n", i)
+			fmt.Printf("%d\tOK\tNo restrictions.\n", i)
 		}
 		if cov != nil {
-			fmt.Printf("%d: NO. Not covered: %s\n", i, cov)
+			fmt.Printf("%d\tNO\tNot covered: %s\n", i, cov)
 		}
 		if wall != nil {
-			fmt.Printf("%d: NO. Moving wall applies.\n", i)
+			fmt.Printf("%d\tNO\tMoving wall applies.\n", i)
 		}
 	}
 

@@ -60,9 +60,10 @@ func (e Entry) TimeRestricted(t time.Time) error {
 		if t.Before(now.Add(e.Embargo)) {
 			return ErrMovingWall
 		}
-	}
-	if t.After(now.Add(e.Embargo)) {
-		return ErrMovingWall
+	} else {
+		if t.After(now.Add(e.Embargo)) {
+			return ErrMovingWall
+		}
 	}
 	return nil
 }

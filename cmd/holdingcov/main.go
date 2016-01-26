@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/miku/holdingfile"
+	"github.com/miku/holdingfile/google"
 	"github.com/miku/holdingfile/kbart"
 	"github.com/miku/holdingfile/ovid"
 )
@@ -53,6 +54,8 @@ func main() {
 		hfile = kbart.NewReader(file)
 	case "ovid":
 		hfile = ovid.NewReader(file)
+	case "google":
+		hfile = google.NewReader(file)
 	default:
 		log.Fatal("unknown format")
 

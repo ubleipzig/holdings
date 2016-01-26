@@ -76,6 +76,7 @@ func parseEmbargo(s string) time.Duration {
 		return d
 	}
 }
+
 func (r Reader) ReadAll() (holdingfile.Entries, error) {
 	entries := make(holdingfile.Entries)
 	decoder := xml.NewDecoder(r.r)

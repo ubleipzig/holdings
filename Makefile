@@ -11,3 +11,6 @@ test:
 
 bench:
 	go test -bench=.
+
+imports:
+	goimports -w .

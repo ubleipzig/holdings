@@ -3,3 +3,9 @@ all:
 
 clean:
 	rm -f ./kbartcheck
+
+test:
+	go test -v ./...
+
+bench:
+	go test -bench=.

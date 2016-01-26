@@ -5,11 +5,17 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/miku/holdingfile"
 	"github.com/miku/holdingfile/kbart"
 )
+
+var layouts = []string{
+	"2006",
+	"2006-01-02",
+}
 
 func main() {
 	date := flag.String("date", "", "record date")
@@ -44,9 +50,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	t, err := time.Parse("2006-01-02", *date)
-	if err != nil {
-		log.Fatal(err)
+	var t time.Time
+
+	for _, layout := range layouts {
+		t, err = time.Parse(layout, *date)
+		if err == nil {
+			break
+		}
+	}
+
+	if t.IsZero() {
+		log.Fatalf("could not parse date with any of %s", strings.Join(layouts, ", "))
 	}
 
 	s := holdingfile.Signature{Date: *date, Volume: *volume, Issue: *issue}

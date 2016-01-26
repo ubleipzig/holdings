@@ -20,21 +20,21 @@ Testdrive
 
     $ make
 
-    $ ./kbartcheck fixtures/kbart.txt
+    $ kbartcheck fixtures/kbart.txt
     {"incomplete embargo":1,"records":72057}
 
-    $ ./kbartcheck -skip fixtures/kbart.txt
+    $ kbartcheck -skip fixtures/kbart.txt
     {"records":72056}
 
-    $ ./holdingcov -issn 1325-9210 -file fixtures/kbart.txt -date 2009-10-10
+    $ holdingcov -issn 1325-9210 -file fixtures/kbart.txt -date 2009-10-10
     0   OK  No restrictions.
     1   NO  Not covered: after coverage interval
 
-    $ ./holdingcov -issn 1520-4898 -date 1995 -volume 29 -file fixtures/kbart.txt
+    $ holdingcov -issn 1520-4898 -date 1995 -volume 29 -file fixtures/kbart.txt
     0   NO  Not covered: before coverage interval
     1   NO  Not covered: after coverage interval
 
-    $ ./holdingcov -issn 1520-4898 -date 1995 -volume 28 -file fixtures/kbart.txt
+    $ holdingcov -issn 1520-4898 -date 1995 -volume 28 -file fixtures/kbart.txt
     0   NO  Not covered: before coverage interval
     1   OK  No restrictions.
 

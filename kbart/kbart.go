@@ -96,15 +96,15 @@ type Reader struct {
 	r          *bufio.Reader
 	currentRow int
 
-	SkipFirstRow             bool
-	IgnoreMissingIdentifiers bool
-	IgnoreIncompleteLines    bool
-	IgnoreInvalidEmbargo     bool
+	SkipFirstRow           bool
+	SkipMissingIdentifiers bool
+	SkipIncompleteLines    bool
+	SkipInvalidEmbargo     bool
 }
 
 // NewReader creates a new KBART reader.
 func NewReader(r io.Reader) *Reader {
-	return &Reader{r: bufio.NewReader(r)}
+	return &Reader{SkipFirstRow: true, SkipMissingIdentifiers: true, r: bufio.NewReader(r)}
 }
 
 // ReadAll loads entries from a reader.
@@ -120,15 +120,15 @@ func (r *Reader) ReadAll() (holdingfile.Entries, error) {
 
 		switch err {
 		case ErrMissingIdentifiers:
-			if !r.IgnoreMissingIdentifiers {
+			if !r.SkipMissingIdentifiers {
 				return entries, err
 			}
 		case ErrIncompleteLine:
-			if !r.IgnoreIncompleteLines {
+			if !r.SkipIncompleteLines {
 				return entries, err
 			}
 		case ErrInvalidEmbargo:
-			if !r.IgnoreInvalidEmbargo {
+			if !r.SkipInvalidEmbargo {
 				return entries, err
 			}
 		}
@@ -137,7 +137,7 @@ func (r *Reader) ReadAll() (holdingfile.Entries, error) {
 		oi := strings.TrimSpace(cols.OnlineIdentifier)
 
 		if pi == "" && oi == "" {
-			if !r.IgnoreMissingIdentifiers {
+			if !r.SkipMissingIdentifiers {
 				return entries, ErrMissingIdentifiers
 			}
 		}

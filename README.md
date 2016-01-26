@@ -71,9 +71,10 @@ var reader holdings.File = kbart.NewReader(file)
 entries, _ := reader.ReadAll()
 
 licenses := entries.Licenses("1613-4141")
+var err error
 for _, license := range licenses {
-    license.Covers(...) // pass signature of record here
-    license.TimeRestricted(...) // pass publish date of record here
+    err = license.Covers(...) // pass signature of record here, returns nil, if all is ok
+    err = license.TimeRestricted(...) // pass publish date of record here, returns nil, if all is ok
 }
 ```
 

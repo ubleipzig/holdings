@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/miku/holdingfile"
+	"github.com/miku/holdings"
 )
 
 // delayPattern is how moving walls are expressed in OVID.
@@ -77,8 +77,8 @@ func parseEmbargo(s string) time.Duration {
 	}
 }
 
-func (r Reader) ReadAll() (holdingfile.Entries, error) {
-	entries := make(holdingfile.Entries)
+func (r Reader) ReadAll() (holdings.Entries, error) {
+	entries := make(holdings.Entries)
 	decoder := xml.NewDecoder(r.r)
 	var tag string
 
@@ -106,13 +106,13 @@ func (r Reader) ReadAll() (holdingfile.Entries, error) {
 				}
 
 				for _, ent := range item.Entitlements {
-					entry := holdingfile.Entry{
-						Begin: holdingfile.Signature{
+					entry := holdings.Entry{
+						Begin: holdings.Signature{
 							Date:   ent.FromYear,
 							Volume: ent.FromVolume,
 							Issue:  ent.FromIssue,
 						},
-						End: holdingfile.Signature{
+						End: holdings.Signature{
 							Date:   ent.ToYear,
 							Volume: ent.ToVolume,
 							Issue:  ent.ToIssue,

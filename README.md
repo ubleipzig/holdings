@@ -58,14 +58,16 @@ Testdrive
 Progammatic access
 ------------------
 
-    file, _ := os.Open("/path/to/kbart.txt")
-    reader := kbart.NewReader(file)
-    entries, _ := reader.ReadAll()
+```go
+file, _ := os.Open("/path/to/kbart.txt")
+reader := kbart.NewReader(file)
+entries, _ := reader.ReadAll()
 
-    licenses := entries.Licenses("1613-4141")
-    for _, license := range licenses {
-        license.Covers(...) // pass signature of record here
-        license.TimeRestricted(...) // pass publish date of record here
-    }
+licenses := entries.Licenses("1613-4141")
+for _, license := range licenses {
+    license.Covers(...) // pass signature of record here
+    license.TimeRestricted(...) // pass publish date of record here
+}
+```
 
 See also: [holdingcov](https://github.com/miku/holdingfile/blob/master/cmd/holdingcov/main.go).

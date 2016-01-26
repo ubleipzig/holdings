@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/kr/pretty"
-	"github.com/miku/holdingfile"
+	"github.com/miku/holdings"
 )
 
 func TestEmbargeDisallowEarlier(t *testing.T) {
@@ -58,28 +58,28 @@ func TestEmbargoDuration(t *testing.T) {
 func TestFromReader(t *testing.T) {
 	var cases = []struct {
 		r       io.Reader
-		entries holdingfile.Entries
+		entries holdings.Entries
 		err     error
 	}{
 		{r: strings.NewReader("first line is discarded"),
-			entries: make(holdingfile.Entries),
+			entries: make(holdings.Entries),
 			err:     nil},
 		{r: strings.NewReader("xxx\nyyy\nzzz"),
-			entries: make(holdingfile.Entries),
+			entries: make(holdings.Entries),
 			err:     ErrIncompleteLine},
 		// Beware: KBART files must end with newline, otherwise the last row is ignored.
 		{r: strings.NewReader(`publication_title	print_identifier	online_identifier	date_first_issue_online	num_first_vol_online	num_first_issue_online	date_last_issue_online	num_last_vol_online	num_last_issue_online	title_url	first_author	title_id	embargo_info	coverage_depth	coverage_notes	publisher_name	own_anchor	il_relevance	il_nationwide	il_electronic_transmission	il_comment	all_issns	zdb_id
 Bill of Rights Journal (via Hein Online)	0006-2499		1968	1		1996	29		http://heinonline.org/HOL/Index?index=journals/blorij&collection=journals		227801		Volltext		via Hein Online		Keine Fernleihe				0006-2499	2805467-2
 `),
-			entries: holdingfile.Entries{
-				"0006-2499": []holdingfile.License{
-					holdingfile.Entry{
-						Begin: holdingfile.Signature{
+			entries: holdings.Entries{
+				"0006-2499": []holdings.License{
+					holdings.Entry{
+						Begin: holdings.Signature{
 							Date:   "1968",
 							Volume: "1",
 							Issue:  "",
 						},
-						End: holdingfile.Signature{
+						End: holdings.Signature{
 							Date:   "1996",
 							Volume: "29",
 							Issue:  "",
@@ -93,15 +93,15 @@ Bill of Rights Journal (via Hein Online)	0006-2499		1968	1		1996	29		http://hein
 
 Bill of Rights Journal (via Hein Online)	0006-2499		1968	1		1996	29		http://heinonline.org/HOL/Index?index=journals/blorij&collection=journals		227801		Volltext		via Hein Online		Keine Fernleihe				0006-2499	2805467-2
 `),
-			entries: holdingfile.Entries{
-				"0006-2499": []holdingfile.License{
-					holdingfile.Entry{
-						Begin: holdingfile.Signature{
+			entries: holdings.Entries{
+				"0006-2499": []holdings.License{
+					holdings.Entry{
+						Begin: holdings.Signature{
 							Date:   "1968",
 							Volume: "1",
 							Issue:  "",
 						},
-						End: holdingfile.Signature{
+						End: holdings.Signature{
 							Date:   "1996",
 							Volume: "29",
 							Issue:  "",

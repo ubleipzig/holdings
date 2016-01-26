@@ -9,7 +9,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/miku/holdingfile/kbart"
+	"github.com/miku/holdings/kbart"
 )
 
 func main() {

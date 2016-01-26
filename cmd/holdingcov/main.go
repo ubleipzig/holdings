@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/miku/holdingfile"
-	"github.com/miku/holdingfile/google"
-	"github.com/miku/holdingfile/kbart"
-	"github.com/miku/holdingfile/ovid"
+	"github.com/miku/holdings"
+	"github.com/miku/holdings/google"
+	"github.com/miku/holdings/kbart"
+	"github.com/miku/holdings/ovid"
 )
 
 var layouts = []string{
@@ -47,7 +47,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var hfile holdingfile.File
+	var hfile holdings.File
 
 	switch *format {
 	case "kbart":
@@ -61,7 +61,7 @@ func main() {
 
 	}
 
-	holdings, err := hfile.ReadAll()
+	entries, err := hfile.ReadAll()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -79,9 +79,9 @@ func main() {
 		log.Fatalf("could not parse date with any of %s", strings.Join(layouts, ", "))
 	}
 
-	s := holdingfile.Signature{Date: *date, Volume: *volume, Issue: *issue}
+	s := holdings.Signature{Date: *date, Volume: *volume, Issue: *issue}
 
-	lics := holdings.Licenses(*issn)
+	lics := entries.Licenses(*issn)
 
 	for i, l := range lics {
 		if *verbose {

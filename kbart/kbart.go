@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/miku/holdingfile"
+	"github.com/miku/holdings"
 )
 
 var (
@@ -107,8 +107,8 @@ func NewReader(r io.Reader) *Reader {
 }
 
 // ReadAll loads entries from a reader.
-func (r *Reader) ReadAll() (holdingfile.Entries, error) {
-	entries := make(holdingfile.Entries)
+func (r *Reader) ReadAll() (holdings.Entries, error) {
+	entries := make(holdings.Entries)
 
 	for {
 		cols, entry, err := r.Read()
@@ -141,10 +141,10 @@ func (r *Reader) ReadAll() (holdingfile.Entries, error) {
 			}
 		}
 		if pi != "" {
-			entries[pi] = append(entries[pi], holdingfile.License(entry))
+			entries[pi] = append(entries[pi], holdings.License(entry))
 		}
 		if oi != "" {
-			entries[oi] = append(entries[oi], holdingfile.License(entry))
+			entries[oi] = append(entries[oi], holdings.License(entry))
 		}
 	}
 
@@ -152,8 +152,8 @@ func (r *Reader) ReadAll() (holdingfile.Entries, error) {
 }
 
 // Read reads a single line.
-func (r *Reader) Read() (columns, holdingfile.Entry, error) {
-	var entry holdingfile.Entry
+func (r *Reader) Read() (columns, holdings.Entry, error) {
+	var entry holdings.Entry
 	var cols columns
 
 	if r.SkipFirstRow && r.currentRow == 0 {
@@ -205,13 +205,13 @@ func (r *Reader) Read() (columns, holdingfile.Entry, error) {
 		return cols, entry, err
 	}
 
-	entry = holdingfile.Entry{
-		Begin: holdingfile.Signature{
+	entry = holdings.Entry{
+		Begin: holdings.Signature{
 			Date:   cols.FirstIssueDate,
 			Volume: cols.FirstVolume,
 			Issue:  cols.FirstIssue,
 		},
-		End: holdingfile.Signature{
+		End: holdings.Signature{
 			Date:   cols.LastIssueDate,
 			Volume: cols.LastVolume,
 			Issue:  cols.LastIssue,

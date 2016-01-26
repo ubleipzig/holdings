@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -14,7 +15,10 @@ import (
 func main() {
 	var r io.Reader
 
+	skipHeader := flag.Bool("skip", false, "skip header row")
+
 	flag.Parse()
+
 	if flag.NArg() == 0 {
 		r = bufio.NewReader(os.Stdin)
 	} else {
@@ -22,20 +26,29 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		r = bufio.NewReader(file)
+		r = file
 	}
 
 	kr := kbart.NewReader(r)
-	kr.SkipFirstRow = true
+	kr.SkipFirstRow = *skipHeader
+
+	stats := make(map[string]int)
+	var i int
 
 	for {
 		_, _, err := kr.Read()
 		if err == io.EOF {
 			break
 		}
+		i++
 		if err != nil {
-			fmt.Println(err)
+			stats[err.Error()]++
 		}
 	}
-
+	stats["records"] = i
+	b, err := json.Marshal(stats)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(b))
 }

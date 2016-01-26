@@ -1,8 +1,9 @@
 package kbart
 
 import (
-	"encoding/csv"
+	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -86,7 +87,7 @@ func (e embargo) DisallowEarlier() bool {
 }
 
 type Reader struct {
-	r                        *csv.Reader
+	r                        *bufio.Reader
 	SkipFirstRow             bool
 	IgnoreMissingIdentifiers bool
 	IgnoreIncompleteLines    bool
@@ -95,11 +96,7 @@ type Reader struct {
 }
 
 func NewReader(r io.Reader) *Reader {
-	cr := csv.NewReader(r)
-	cr.Comma = '\t'
-	cr.FieldsPerRecord = 23
-	cr.LazyQuotes = true
-	return &Reader{r: cr}
+	return &Reader{r: bufio.NewReader(r)}
 }
 
 // ReadAll loads entries from a reader. Must be a tab-separated CSV with
@@ -154,18 +151,22 @@ func (r *Reader) Read() (columns, holdingfile.Entry, error) {
 	var cols columns
 
 	if r.SkipFirstRow && r.currentRow == 0 {
-		if _, err := r.r.Read(); err != nil {
+		if _, err := r.r.ReadString('\n'); err != nil {
 			return cols, entry, err
 		}
 	}
 
-	record, err := r.r.Read()
 	r.currentRow++
+	line, err := r.r.ReadString('\n')
+	record := strings.Split(line, "\t")
 
 	if err == io.EOF {
 		return cols, entry, io.EOF
 	}
 	if err != nil {
+		for i, x := range record {
+			fmt.Println(i, x)
+		}
 		return cols, entry, err
 	}
 	if len(record) < 23 {

@@ -14,3 +14,9 @@ Supported formats:
 Not supported:
 
 * http://www.loc.gov/marc/holdings/echdhome.html
+
+Test
+----
+
+	$ make
+	$ cat fixtures/kbart.txt | go run cmd/kbartcheck/main.go

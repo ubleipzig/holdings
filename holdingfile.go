@@ -158,7 +158,7 @@ func (s Signature) VolumeInt() int {
 	return findInt(s.Volume)
 }
 
-// VolumeInt returns the Volume in a best effort manner.
+// IssueInt returns the issue as int in a best effort manner.
 func (s Signature) IssueInt() int {
 	return findInt(s.Issue)
 }

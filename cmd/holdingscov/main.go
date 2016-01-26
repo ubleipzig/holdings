@@ -85,7 +85,7 @@ func main() {
 
 	for i, license := range licenses {
 		if *verbose {
-			log.Printf("%+v", l)
+			log.Printf("%+v", license)
 		}
 
 		cov, wall := license.Covers(s), license.TimeRestricted(t)

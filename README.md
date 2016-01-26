@@ -26,29 +26,31 @@ Testdrive
     $ kbartcheck -skip fixtures/kbart.txt
     {"records":72056}
 
-    $ holdingcov -issn 1325-9210 -file fixtures/kbart.txt -date 2009-10-10
+Check coverage.
+
+    $ holdingscov -issn 1325-9210 -file fixtures/kbart.txt -date 2009-10-10
     0   OK  No restrictions.
     1   NO  Not covered: after coverage interval
 
-    $ holdingcov -issn 1520-4898 -date 1995 -volume 29 -file fixtures/kbart.txt
+    $ holdingscov -issn 1520-4898 -date 1995 -volume 29 -file fixtures/kbart.txt
     0   NO  Not covered: before coverage interval
     1   NO  Not covered: after coverage interval
 
-    $ holdingcov -issn 1520-4898 -date 1995 -volume 28 -file fixtures/kbart.txt
+    $ holdingscov -issn 1520-4898 -date 1995 -volume 28 -file fixtures/kbart.txt
     0   NO  Not covered: before coverage interval
     1   OK  No restrictions.
 
-    $ holdingcov -issn 1613-4141 -date 2015 -volume 1 -issue 2 -file fixtures/kbart.txt
+    $ holdingscov -issn 1613-4141 -date 2015 -volume 1 -issue 2 -file fixtures/kbart.txt
     0   OK  No restrictions.
     1   NO  Moving wall applies.
     2   NO  Not covered: after coverage interval
 
-    $ holdingcov -issn 1613-4141 -date 2015 -volume 1 -issue 2 -file fixtures/ovid.xml -format ovid
+    $ holdingscov -issn 1613-4141 -date 2015 -volume 1 -issue 2 -file fixtures/ovid.xml -format ovid
     0   OK  No restrictions.
     1   OK  No restrictions.
     2   NO  Not covered: after coverage interval
 
-    $ holdingcov -issn 1613-4141 -date 2015 -volume 1 -issue 2 -file fixtures/google.xml -format google
+    $ holdingscov -issn 1613-4141 -date 2015 -volume 1 -issue 2 -file fixtures/google.xml -format google
     0   OK  No restrictions.
     1   OK  No restrictions.
     2   NO  Not covered: after coverage interval
@@ -70,4 +72,4 @@ for _, license := range licenses {
 }
 ```
 
-See also: [holdingcov](https://github.com/miku/holdingfile/blob/master/cmd/holdingcov/main.go).
+See also: [holdingscov](https://github.com/miku/holdingfile/blob/master/cmd/holdingscov/main.go).

@@ -162,9 +162,21 @@ func (r *Reader) Read() (columns, holdingfile.Entry, error) {
 			return cols, entry, err
 		}
 	}
-
 	r.currentRow++
-	line, err := r.r.ReadString('\n')
+
+	var line string
+	var err error
+
+	for {
+		line, err = r.r.ReadString('\n')
+		if strings.TrimSpace(line) != "" {
+			break
+		}
+		if err == io.EOF {
+			return cols, entry, io.EOF
+		}
+	}
+
 	record := strings.Split(line, "\t")
 
 	if err == io.EOF {

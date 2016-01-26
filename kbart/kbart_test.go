@@ -56,7 +56,7 @@ func TestEmbargoDuration(t *testing.T) {
 }
 
 func TestFromReader(t *testing.T) {
-	var tests = []struct {
+	var cases = []struct {
 		r       io.Reader
 		entries holdingfile.Entries
 		err     error
@@ -88,14 +88,18 @@ Bill of Rights Journal (via Hein Online)	0006-2499		1968	1		1996	29		http://hein
 			err: nil},
 	}
 
-	for _, test := range tests {
-		entries, err := ReadEntries(test.r)
-		if err != test.err {
-			t.Errorf("FromReader error got %+v, want %+v", err, test.err)
+	for _, c := range cases {
+
+		reader := NewReader(c.r)
+		reader.SkipFirstRow = true
+
+		entries, err := reader.ReadAll()
+		if err != c.err {
+			t.Errorf("ReadAll got %+v, want %+v", err, c.err)
 		}
-		if !reflect.DeepEqual(entries, test.entries) {
-			t.Errorf("FromReader Entries got %+v, want %+v", entries, test.entries)
-			for _, s := range pretty.Diff(test.entries, entries) {
+		if !reflect.DeepEqual(entries, c.entries) {
+			t.Errorf("ReadAll got %+v, want %+v", entries, c.entries)
+			for _, s := range pretty.Diff(c.entries, entries) {
 				t.Errorf(s)
 			}
 		}

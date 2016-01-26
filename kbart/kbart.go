@@ -85,87 +85,137 @@ func (e embargo) DisallowEarlier() bool {
 	return strings.HasPrefix(strings.TrimSpace(string(e)), "R")
 }
 
-// ReadEntries loads entries from a reader. Must be a tab-separated CSV with
+type Reader struct {
+	r                        *csv.Reader
+	SkipFirstRow             bool
+	IgnoreMissingIdentifiers bool
+	IgnoreIncompleteLines    bool
+	IgnoreInvalidEmbargo     bool
+	currentRow               int
+}
+
+func NewReader(r io.Reader) *Reader {
+	cr := csv.NewReader(r)
+	cr.Comma = '\t'
+	cr.FieldsPerRecord = 23
+	cr.LazyQuotes = true
+	return &Reader{r: cr}
+}
+
+// ReadAll loads entries from a reader. Must be a tab-separated CSV with
 // exactly one header row.
-func ReadEntries(r io.Reader) (holdingfile.Entries, error) {
+func (r *Reader) ReadAll() (holdingfile.Entries, error) {
 	entries := make(holdingfile.Entries)
 
-	reader := csv.NewReader(r)
-	reader.Comma = '\t'
-
-	if _, err := reader.Read(); err != nil {
-		return entries, err
-	}
-
 	for {
-		record, err := reader.Read()
+		cols, entry, err := r.Read()
+
 		if err == io.EOF {
 			break
 		}
-		if err != nil {
-			return entries, err
-		}
-		if len(record) < 23 {
-			return entries, ErrIncompleteLine
+
+		switch err {
+		case ErrMissingIdentifiers:
+			if !r.IgnoreMissingIdentifiers {
+				return entries, err
+			}
+		case ErrIncompleteLine:
+			if !r.IgnoreIncompleteLines {
+				return entries, err
+			}
+		case ErrInvalidEmbargo:
+			if !r.IgnoreInvalidEmbargo {
+				return entries, err
+			}
 		}
 
-		cols := columns{
-			PublicationTitle:         record[0],
-			PrintIdentifier:          record[1],
-			OnlineIdentifier:         record[2],
-			FirstIssueDate:           record[3],
-			FirstVolume:              record[4],
-			FirstIssue:               record[5],
-			LastIssueDate:            record[6],
-			LastVolume:               record[7],
-			LastIssue:                record[8],
-			TitleURL:                 record[9],
-			FirstAuthor:              record[10],
-			TitleID:                  record[11],
-			Embargo:                  embargo(record[12]),
-			CoverageDepth:            record[13],
-			CoverageNotes:            record[14],
-			PublisherName:            record[15],
-			Anchor:                   record[16],
-			InterlibraryRelevance:    record[17],
-			InterlibraryNationwide:   record[18],
-			InterlibraryTransmission: record[19],
-			InterlibraryComment:      record[20],
-			ZDBID:                    record[22],
-		}
+		pi := strings.TrimSpace(cols.PrintIdentifier)
+		oi := strings.TrimSpace(cols.OnlineIdentifier)
 
-		emb, err := cols.Embargo.AsDuration()
-		if err != nil {
-			return entries, err
+		if pi == "" && oi == "" {
+			if !r.IgnoreMissingIdentifiers {
+				return entries, ErrMissingIdentifiers
+			}
 		}
-
-		entry := holdingfile.Entry{
-			Begin: holdingfile.Signature{
-				Date:   cols.FirstIssueDate,
-				Volume: cols.FirstVolume,
-				Issue:  cols.FirstIssue,
-			},
-			End: holdingfile.Signature{
-				Date:   cols.LastIssueDate,
-				Volume: cols.LastVolume,
-				Issue:  cols.LastIssue,
-			},
-			Embargo:                emb,
-			EmbargoDisallowEarlier: cols.Embargo.DisallowEarlier(),
+		if pi != "" {
+			entries[pi] = append(entries[pi], holdingfile.License(entry))
 		}
-
-		if cols.PrintIdentifier == "" && cols.OnlineIdentifier == "" {
-			return entries, ErrMissingIdentifiers
-		}
-
-		if cols.PrintIdentifier != "" {
-			entries[cols.PrintIdentifier] = append(
-				entries[cols.PrintIdentifier], holdingfile.License(entry))
-		}
-		if cols.OnlineIdentifier != "" {
-			entries[cols.OnlineIdentifier] = append(
-				entries[cols.OnlineIdentifier], holdingfile.License(entry))
+		if oi != "" {
+			entries[oi] = append(entries[oi], holdingfile.License(entry))
 		}
 	}
+
 	return entries, nil
+}
+
+// Read reads a single line.
+func (r *Reader) Read() (columns, holdingfile.Entry, error) {
+	var entry holdingfile.Entry
+	var cols columns
+
+	if r.SkipFirstRow && r.currentRow == 0 {
+		if _, err := r.r.Read(); err != nil {
+			return cols, entry, err
+		}
+	}
+
+	record, err := r.r.Read()
+	r.currentRow++
+
+	if err == io.EOF {
+		return cols, entry, io.EOF
+	}
+	if err != nil {
+		return cols, entry, err
+	}
+	if len(record) < 23 {
+		return cols, entry, ErrIncompleteLine
+	}
+
+	cols = columns{
+		PublicationTitle:         record[0],
+		PrintIdentifier:          record[1],
+		OnlineIdentifier:         record[2],
+		FirstIssueDate:           record[3],
+		FirstVolume:              record[4],
+		FirstIssue:               record[5],
+		LastIssueDate:            record[6],
+		LastVolume:               record[7],
+		LastIssue:                record[8],
+		TitleURL:                 record[9],
+		FirstAuthor:              record[10],
+		TitleID:                  record[11],
+		Embargo:                  embargo(record[12]),
+		CoverageDepth:            record[13],
+		CoverageNotes:            record[14],
+		PublisherName:            record[15],
+		Anchor:                   record[16],
+		InterlibraryRelevance:    record[17],
+		InterlibraryNationwide:   record[18],
+		InterlibraryTransmission: record[19],
+		InterlibraryComment:      record[20],
+		ZDBID:                    record[22],
+	}
+
+	emb, err := cols.Embargo.AsDuration()
+	if err != nil {
+		return cols, entry, err
+	}
+
+	entry = holdingfile.Entry{
+		Begin: holdingfile.Signature{
+			Date:   cols.FirstIssueDate,
+			Volume: cols.FirstVolume,
+			Issue:  cols.FirstIssue,
+		},
+		End: holdingfile.Signature{
+			Date:   cols.LastIssueDate,
+			Volume: cols.LastVolume,
+			Issue:  cols.LastIssue,
+		},
+		Embargo:                emb,
+		EmbargoDisallowEarlier: cols.Embargo.DisallowEarlier(),
+	}
+
+	return cols, entry, nil
 }

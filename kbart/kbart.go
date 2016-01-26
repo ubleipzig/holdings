@@ -20,8 +20,10 @@ var (
 	ErrMissingIdentifiers = errors.New("missing identifiers")
 )
 
+// delayPattern fixes allowed embargo strings.
 var delayPattern = regexp.MustCompile(`([P|R])([0-9]+)([Y|M|D])`)
 
+// embargo is a string representing a delay, e.g. P1Y, R10M.
 type embargo string
 
 // entry represents the various columns.
@@ -82,25 +84,30 @@ func (e embargo) AsDuration() (time.Duration, error) {
 	}
 }
 
+// DisallowEarlier returns true if dates *before* the boundary should be
+// disallowed.
 func (e embargo) DisallowEarlier() bool {
 	return strings.HasPrefix(strings.TrimSpace(string(e)), "R")
 }
 
+// Reader reads tab-separated KBART. The encoding/csv package did not like
+// that particular format so we use a simple bufio.Reader for now.
 type Reader struct {
-	r                        *bufio.Reader
+	r          *bufio.Reader
+	currentRow int
+
 	SkipFirstRow             bool
 	IgnoreMissingIdentifiers bool
 	IgnoreIncompleteLines    bool
 	IgnoreInvalidEmbargo     bool
-	currentRow               int
 }
 
+// NewReader creates a new KBART reader.
 func NewReader(r io.Reader) *Reader {
 	return &Reader{r: bufio.NewReader(r)}
 }
 
-// ReadAll loads entries from a reader. Must be a tab-separated CSV with
-// exactly one header row.
+// ReadAll loads entries from a reader.
 func (r *Reader) ReadAll() (holdingfile.Entries, error) {
 	entries := make(holdingfile.Entries)
 

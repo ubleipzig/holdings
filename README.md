@@ -38,4 +38,9 @@ Testdrive
     0   NO  Not covered: before coverage interval
     1   OK  No restrictions.
 
+    $ holdingcov -issn 1613-4141 -date 2015 -volume 1 -issue 2 -file fixtures/kbart.txt
+    0   OK  No restrictions.
+    1   NO  Moving wall applies.
+    2   NO  Not covered: after coverage interval
+
     $ make clean

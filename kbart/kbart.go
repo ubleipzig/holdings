@@ -3,7 +3,6 @@ package kbart
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -183,9 +182,6 @@ func (r *Reader) Read() (columns, holdingfile.Entry, error) {
 		return cols, entry, io.EOF
 	}
 	if err != nil {
-		for i, x := range record {
-			fmt.Println(i, x)
-		}
 		return cols, entry, err
 	}
 	if len(record) < 23 {

@@ -32,6 +32,15 @@ type License interface {
 	TimeRestricted(time.Time) error
 }
 
+// Entries holds a list of license entries by ISSN. A simple implementation of
+// Holdings.
+type Entries map[string][]License
+
+// Licenses make Entries fulfill the holdings interface.
+func (e Entries) Licenses(issn string) []License {
+	return e[issn]
+}
+
 // Entry is a reduced holding file entry. Usually, moving wall allow the
 // items, that are earlier then the boundary. If EmbargoDisallowEarlier is
 // set, the effect is reversed.
@@ -166,24 +175,4 @@ func findInt(s string) int {
 		i, _ := strconv.ParseInt(m, 10, 32)
 		return int(i)
 	}
-}
-
-// Entries holds a list of license entries by ISSN.
-type Entries struct {
-	Map map[string][]Entry
-}
-
-// NewEntries returns an empty entries map.
-func NewEntries() Entries {
-	return Entries{Map: make(map[string][]Entry)}
-}
-
-// Licenses turns Entries into a Holdings thing.
-func (e Entries) Licenses(issn string) []License {
-	entries := e.Map[issn]
-	var licenses []License
-	for _, e := range entries {
-		licenses = append(licenses, e)
-	}
-	return licenses
 }

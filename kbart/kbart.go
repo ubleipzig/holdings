@@ -88,7 +88,7 @@ func (e embargo) DisallowEarlier() bool {
 // ReadEntries loads entries from a reader. Must be a tab-separated CSV with
 // exactly one header row.
 func ReadEntries(r io.Reader) (holdingfile.Entries, error) {
-	entries := holdingfile.NewEntries()
+	entries := make(holdingfile.Entries)
 
 	reader := csv.NewReader(r)
 	reader.Comma = '\t'
@@ -159,10 +159,12 @@ func ReadEntries(r io.Reader) (holdingfile.Entries, error) {
 		}
 
 		if cols.PrintIdentifier != "" {
-			entries.Map[cols.PrintIdentifier] = append(entries.Map[cols.PrintIdentifier], entry)
+			entries[cols.PrintIdentifier] = append(
+				entries[cols.PrintIdentifier], holdingfile.License(entry))
 		}
 		if cols.OnlineIdentifier != "" {
-			entries.Map[cols.OnlineIdentifier] = append(entries.Map[cols.OnlineIdentifier], entry)
+			entries[cols.OnlineIdentifier] = append(
+				entries[cols.OnlineIdentifier], holdingfile.License(entry))
 		}
 	}
 	return entries, nil

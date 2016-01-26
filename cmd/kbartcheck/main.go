@@ -16,6 +16,7 @@ func main() {
 	var r io.Reader
 
 	skipHeader := flag.Bool("skip", false, "skip header row")
+	verbose := flag.Bool("verbose", false, "report line numbers for errors")
 
 	flag.Parse()
 
@@ -42,10 +43,15 @@ func main() {
 		}
 		i++
 		if err != nil {
+			if *verbose {
+				log.Printf("line %d: %s", i, err)
+			}
 			stats[err.Error()]++
 		}
 	}
+
 	stats["records"] = i
+
 	b, err := json.Marshal(stats)
 	if err != nil {
 		log.Fatal(err)

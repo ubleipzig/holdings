@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -56,12 +55,7 @@ func main() {
 
 	for i, l := range lics {
 		if *verbose {
-			b, err := json.Marshal(l)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println()
-			fmt.Println(string(b))
+			log.Printf("%+v", l)
 		}
 		cov := l.Covers(s)
 		wall := l.TimeRestricted(t)

@@ -32,6 +32,10 @@ type License interface {
 	TimeRestricted(time.Time) error
 }
 
+type File interface {
+	ReadAll() (Entries, error)
+}
+
 // Entries holds a list of license entries by ISSN. A simple implementation of
 // Holdings.
 type Entries map[string][]License

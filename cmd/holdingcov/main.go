@@ -23,7 +23,15 @@ func main() {
 	flag.Parse()
 
 	if *issn == "" {
-		log.Fatal("ISSN is required")
+		log.Fatal("-issn is required")
+	}
+
+	if *filename == "" {
+		log.Fatal("a holding -file is required")
+	}
+
+	if *date == "" {
+		log.Fatal("-date is required")
 	}
 
 	file, err := os.Open(*filename)

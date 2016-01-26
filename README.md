@@ -43,4 +43,14 @@ Testdrive
     1   NO  Moving wall applies.
     2   NO  Not covered: after coverage interval
 
+    $ holdingcov -issn 1613-4141 -date 2015 -volume 1 -issue 2 -file fixtures/ovid.xml -format ovid
+    0   OK  No restrictions.
+    1   OK  No restrictions.
+    2   NO  Not covered: after coverage interval
+
+    $ holdingcov -issn 1613-4141 -date 2015 -volume 1 -issue 2 -file fixtures/google.xml -format google
+    0   OK  No restrictions.
+    1   OK  No restrictions.
+    2   NO  Not covered: after coverage interval
+
     $ make clean

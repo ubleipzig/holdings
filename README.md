@@ -62,7 +62,12 @@ Progammatic access
 
 ```go
 file, _ := os.Open("/path/to/kbart.txt")
-reader := kbart.NewReader(file)
+var reader holdings.File = kbart.NewReader(file)
+
+// ovid and google are analogous
+// file, _ := os.Open("/path/to/ovid.xml")
+// var reader holdings.File = ovid.NewReader(file)
+
 entries, _ := reader.ReadAll()
 
 licenses := entries.Licenses("1613-4141")

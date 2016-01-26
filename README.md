@@ -68,10 +68,11 @@ var reader holdings.File = kbart.NewReader(file)
 // file, _ := os.Open("/path/to/ovid.xml")
 // var reader holdings.File = ovid.NewReader(file)
 
-entries, _ := reader.ReadAll()
-
-licenses := entries.Licenses("1613-4141")
 var err error
+
+entries, _ := reader.ReadAll()
+licenses := entries.Licenses("1613-4141")
+
 for _, license := range licenses {
     err = license.Covers(...) // pass signature of record here, returns nil, if all is ok
     err = license.TimeRestricted(...) // pass publish date of record here, returns nil, if all is ok

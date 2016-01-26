@@ -81,14 +81,14 @@ func main() {
 
 	s := holdings.Signature{Date: *date, Volume: *volume, Issue: *issue}
 
-	lics := entries.Licenses(*issn)
+	licenses := entries.Licenses(*issn)
 
-	for i, l := range lics {
+	for i, license := range licenses {
 		if *verbose {
 			log.Printf("%+v", l)
 		}
 
-		cov, wall := l.Covers(s), l.TimeRestricted(t)
+		cov, wall := license.Covers(s), license.TimeRestricted(t)
 
 		if cov == nil && wall == nil {
 			fmt.Printf("%d\tOK\tNo restrictions.\n", i)

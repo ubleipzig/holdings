@@ -15,8 +15,8 @@ Not supported:
 
 * http://www.loc.gov/marc/holdings/echdhome.html
 
-Test
-----
+Testdrive
+---------
 
     $ make
 
@@ -25,3 +25,17 @@ Test
 
     $ ./kbartcheck -skip fixtures/kbart.txt
     {"records":72056}
+
+    $ ./holdingcov -issn 1325-9210 -file fixtures/kbart.txt -date 2009-10-10
+    0   OK  No restrictions.
+    1   NO  Not covered: after coverage interval
+
+    $ ./holdingcov -issn 1520-4898 -date 1995 -volume 29 -file fixtures/kbart.txt
+    0   NO  Not covered: before coverage interval
+    1   NO  Not covered: after coverage interval
+
+    $ ./holdingcov -issn 1520-4898 -date 1995 -volume 28 -file fixtures/kbart.txt
+    0   NO  Not covered: before coverage interval
+    1   OK  No restrictions.
+
+    $ make clean

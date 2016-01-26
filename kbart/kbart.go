@@ -189,28 +189,15 @@ func (r *Reader) Read() (columns, holdingfile.Entry, error) {
 	}
 
 	cols = columns{
-		PublicationTitle:         record[0],
-		PrintIdentifier:          record[1],
-		OnlineIdentifier:         record[2],
-		FirstIssueDate:           record[3],
-		FirstVolume:              record[4],
-		FirstIssue:               record[5],
-		LastIssueDate:            record[6],
-		LastVolume:               record[7],
-		LastIssue:                record[8],
-		TitleURL:                 record[9],
-		FirstAuthor:              record[10],
-		TitleID:                  record[11],
-		Embargo:                  embargo(record[12]),
-		CoverageDepth:            record[13],
-		CoverageNotes:            record[14],
-		PublisherName:            record[15],
-		Anchor:                   record[16],
-		InterlibraryRelevance:    record[17],
-		InterlibraryNationwide:   record[18],
-		InterlibraryTransmission: record[19],
-		InterlibraryComment:      record[20],
-		ZDBID:                    record[22],
+		PrintIdentifier:  record[1],
+		OnlineIdentifier: record[2],
+		FirstIssueDate:   record[3],
+		FirstVolume:      record[4],
+		FirstIssue:       record[5],
+		LastIssueDate:    record[6],
+		LastVolume:       record[7],
+		LastIssue:        record[8],
+		Embargo:          embargo(record[12]),
 	}
 
 	emb, err := cols.Embargo.AsDuration()

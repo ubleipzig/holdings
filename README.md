@@ -18,5 +18,10 @@ Not supported:
 Test
 ----
 
-	$ make
-	$ cat fixtures/kbart.txt | go run cmd/kbartcheck/main.go
+    $ make
+
+    $ ./kbartcheck fixtures/kbart.txt
+    {"incomplete embargo":1,"records":72057}
+
+    $ ./kbartcheck -skip fixtures/kbart.txt
+    {"records":72056}

@@ -57,8 +57,8 @@ Check coverage.
 
     $ make clean
 
-Progammatic access
-------------------
+Programmatic access
+-----.-------------
 
 ```go
 file, _ := os.Open("/path/to/kbart.txt")

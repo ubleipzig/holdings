@@ -80,6 +80,10 @@ func parseEmbargo(s string) time.Duration {
 func (r Reader) ReadAll() (holdings.Entries, error) {
 	entries := make(holdings.Entries)
 	decoder := xml.NewDecoder(r.r)
+
+	// collect errors, let caller decide policy
+	perr := holdings.ParseError{}
+
 	var tag string
 
 	for {
@@ -100,9 +104,9 @@ func (r Reader) ReadAll() (holdings.Entries, error) {
 			tag = se.Name.Local
 			if tag == "holding" {
 				var item Holding
-				err := decoder.DecodeElement(&item, &se)
-				if err != nil {
-					return entries, err
+				if err := decoder.DecodeElement(&item, &se); err != nil {
+					perr.Errors = append(perr.Errors, err)
+					continue
 				}
 
 				for _, ent := range item.Entitlements {
@@ -125,6 +129,9 @@ func (r Reader) ReadAll() (holdings.Entries, error) {
 				}
 			}
 		}
+	}
+	if len(perr.Errors) > 0 {
+		return entries, perr
 	}
 	return entries, nil
 }

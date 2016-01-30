@@ -2,6 +2,7 @@ package holdings
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"time"
@@ -17,6 +18,16 @@ var (
 var (
 	intPattern = regexp.MustCompile("[0-9]+")
 )
+
+// ParseError collects unmarshal errors.
+type ParseError struct {
+	Errors []error
+}
+
+// Error returns the number of errors encountered.
+func (e ParseError) Error() string {
+	return fmt.Sprintf("%d error(s) detected", len(e.Errors))
+}
 
 // Holdings can return a list of licenses for a given ISSN.
 type Holdings interface {
